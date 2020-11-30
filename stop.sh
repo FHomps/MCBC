@@ -1,7 +1,5 @@
 #!/bin/bash
 
-NUMBACKUPS=5
-
 if ! screen -list | grep -q "minecraft" ; then
   echo "Server not started!"
 else
