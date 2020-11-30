@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NUMBACKUPS=5
+NUMBACKUPS=10
 
 if screen -list | grep -q "minecraft" ; then
   echo "Server still running!"
