@@ -5,7 +5,7 @@ if screen -list | grep -q "minecraft" ; then
 else
   cd ~/paper
   echo "Updating Paper..."
-  wget -O paperclip.jar https://papermc.io/ci/job/Paper-1.16/lastSuccessfulBuild/artifact/paperclip.jar
+  wget -O paperclip.jar 'https://papermc.io/api/v1/paper/1.16.4/latest/download'
   echo "Starting server..."
   screen -d -m -S minecraft java -Xms512M -Xmx3584M -jar paperclip.jar
 fi
