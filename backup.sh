@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NUMBACKUPS=10
+NUMBACKUPS=20
 
 if screen -list | grep -q "minecraft" ; then
   echo "Server still running!"
@@ -19,8 +19,8 @@ else
         rm "$(ls -t | tail -1)"
       done
     fi
+    cd ..
   else
     echo "No player logged in since last restart, skipping backup."
   fi
-  cd ..
 fi
