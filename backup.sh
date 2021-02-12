@@ -3,8 +3,8 @@
 NUMBACKUPS=20
 WORLDFILES=( "world" "world_nether" "world_the_end" )
 
-startmsg='Starting live backup, the server may lag for a bit.'
-donemsg='Live backup done!'
+STARTMSG='Starting live backup, the server may lag for a bit.'
+DONEMSG='Live backup done!'
 
 for arg in "$@" ; do
   case $arg in
@@ -23,7 +23,7 @@ for arg in "$@" ; do
   esac
 done
 
-loghead='^\[..:..:..] \[Server thread\/INFO\]: '
+LOGHEAD='^\[..:..:..] \[Server thread\/INFO\]: '
 
 if [ "$live" = true ] ; then
   echo "Attempting live backup..."
@@ -42,17 +42,17 @@ fi
 cd ~/paper
 
 if ! [ "$noskip" = true ] \
-   && ! tac logs/latest.log | sed "/${loghead}\[Server\] ${startmsg}/q" | tac | \
-          grep -q "${loghead}There are [1-9][0-9]* of a max of [0-9]\+ players online" \
-   && ! tac logs/latest.log | sed "/${loghead}\[Server\] ${donemsg}/q" | tac | \
-          grep -q "${loghead}\w* joined the game" ; then
+   && ! tac logs/latest.log | sed "/${LOGHEAD}\[Server\] ${STARTMSG}/q" | tac | \
+          grep -q "${LOGHEAD}There are [1-9][0-9]* of a max of [0-9]\+ players online" \
+   && ! tac logs/latest.log | sed "/${LOGHEAD}\[Server\] ${DONEMSG}/q" | tac | \
+          grep -q "${LOGHEAD}\w* joined the game" ; then
   echo "No players online since last backup or restart, skipping backup"
   exit 0
 fi
 
 if [ "$live" = true ] ; then
   echo "Announcing backup..."
-  screen -S minecraft -X stuff "say ${startmsg}^M"
+  screen -S minecraft -X stuff "say ${STARTMSG}^M"
   screen -S minecraft -X stuff "save-off^M"
   screen -S minecraft -X stuff "save-all flush^M"
   # List current players to let next backups to know if there was player activity between backups
@@ -62,8 +62,8 @@ if [ "$live" = true ] ; then
   echo "Waiting for world flush..."
   sleep 1
   # Wait for the save-all command to stop processing
-  while ! tac logs/latest.log | sed "/${loghead}Saving the game/q" | tac | \
-            grep -q "${loghead}Saved the game" ; do
+  while ! tac logs/latest.log | sed "/${LOGHEAD}Saving the game/q" | tac | \
+            grep -q "${LOGHEAD}Saved the game" ; do
     sleep 0.1
   done
   echo "World flush done, backing up..."
@@ -84,7 +84,7 @@ tar -cpzf backup/${BACKUPTIME}.tar.gz ${COPYDIR}/*
 rm -rf $COPYDIR
 
 if [ "$live" = true ] ; then
-  screen -S minecraft -X stuff "say ${donemsg}^M"
+  screen -S minecraft -X stuff "say ${DONEMSG}^M"
 fi
 
 echo "Backup done."
