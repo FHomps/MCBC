@@ -66,7 +66,6 @@ if [ "$live" = true ] ; then
             grep -q "${LOGHEAD}Saved the game" ; do
     sleep 0.1
   done
-  echo "World flush done, backing up..."
 fi
 
 echo "Backing up world..."
@@ -74,7 +73,7 @@ BACKUPTIME=`date +%d-%m-%y_%H:%M:%S`
 COPYDIR=backup/${BACKUPTIME}_temp
 mkdir $COPYDIR
 cp -r ${WORLDFILES[@]} $COPYDIR
-echo "Copied world files to ${COPYDIR}, compressing..."
+echo "Copied world files to ${COPYDIR}; compressing..."
 
 if [ "$live" = true ] ; then
   screen -S minecraft -X stuff "save-on^M"
