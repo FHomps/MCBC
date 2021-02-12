@@ -55,11 +55,12 @@ if [ "$live" = true ] ; then
   screen -S minecraft -X stuff "say ${STARTMSG}^M"
   screen -S minecraft -X stuff "save-off^M"
   screen -S minecraft -X stuff "save-all flush^M"
-  # List current players to let next backups to know if there was player activity between backups
+  # List current players to let next backups know if there was any player activity between backups
   screen -S minecraft -X stuff "list^M"
+  
+  echo "Waiting for world flush..."
   # Wait for the save-all command to start processing before testing to see if it finished
   # (the write to latest.log is not instant)
-  echo "Waiting for world flush..."
   sleep 1
   # Wait for the save-all command to stop processing
   while ! tac logs/latest.log | sed "/${LOGHEAD}Saving the game/q" | tac | \
