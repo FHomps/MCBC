@@ -12,5 +12,5 @@ else
   sleep 50
   screen -S minecraft -X stuff "say Server restarting in 10 seconds!^M"
   sleep 10
-  sh restart.sh
+  ./restart.sh
 fi
