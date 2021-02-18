@@ -6,6 +6,7 @@
 screen_name='minecraft'
 min_memory=512M
 max_memory=2048M
+java_options=( )
 jar_name='paperclip.jar'
 autoupdate_jar=true
 jar_url='https://papermc.io/api/v1/paper/1.16.5/latest/download'
@@ -33,7 +34,7 @@ mc__start() {
       wget -O "$jar_name" "$jar_url"
     fi
     echo "Starting server..."
-    screen -d -m -S "$screen_name" java -Xms"$min_memory" -Xmx"$max_memory" -jar "$jar_name"
+    screen -d -m -S "$screen_name" java -Xms"$min_memory" -Xmx"$max_memory" "${java_options[@]}" -jar "$jar_name"
   fi
 }
 
@@ -73,8 +74,6 @@ mc__backup() {
     esac
   done
 
-  loghead='^\[..:..:..] \[Server thread\/INFO\]: '
-
   if [ "$live" = true ] ; then
     echo "Attempting live backup..."
     if ! mc__is_running ; then
@@ -88,6 +87,8 @@ mc__backup() {
       return 1
     fi
   fi
+
+  loghead='^\[.*] \[Server thread\/INFO\].*: '
 
   if ! [ "$noskip" = true ] \
      && ! tac logs/latest.log | sed "/${loghead}\[Server\] ${backup_start_msg}/q" | tac | \
@@ -128,7 +129,7 @@ mc__backup() {
     screen -S "$screen_name" -X stuff "save-on^M"
   fi
 
-  tar -cpzf backup/"${backuptime}".tar.gz "${copydir}"/*
+  tar -cpzf backup/"${backuptime}".tar.gz -C "${copydir}" .
   rm -rf "$copydir"
 
   if [ "$live" = true ] ; then
@@ -213,7 +214,7 @@ cmd="mc__$1"
 if declare -f "$cmd" > /dev/null ; then
   shift
   "$cmd" "$@"
-  exit 0
+  exit $?
 else
   echo "${1}: command not found."
   print_help
