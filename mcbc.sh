@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# Default configuration
+
 # General
-folder=~/paper
 screen_name='minecraft'
 min_memory=512M
 max_memory=2048M
@@ -18,10 +19,6 @@ backup_done_msg='Live backup done!'
 # Logging
 num_logs=50
 
-mc__cd() {
-  cd "$folder" || { echo "Directory $folder not found, aborting." ; exit 1 ; }
-}
-
 mc__is_running() {
   screen -list | grep -q "$screen_name"
   return $?
@@ -31,7 +28,6 @@ mc__start() {
   if mc__is_running ; then
     echo "Server already running!"
   else
-    mc__cd
     if [ "$autoupdate_jar" = true ] ; then
       echo "Updating server jar..."
       wget -O "$jar_name" "$jar_url"
@@ -45,7 +41,6 @@ mc__stop() {
   if ! mc__is_running ; then
     echo "Server not started!"
   else
-    mc__cd
     screen -S "$screen_name" -X stuff "stop^M"
     while mc__is_running ; do
       sleep .1
@@ -93,8 +88,6 @@ mc__backup() {
       return 1
     fi
   fi
-
-  mc__cd
 
   if ! [ "$noskip" = true ] \
      && ! tac logs/latest.log | sed "/${loghead}\[Server\] ${backup_start_msg}/q" | tac | \
@@ -156,7 +149,6 @@ mc__restart() {
   if ! mc__is_running ; then
     echo "Server not started!"
   else
-    mc__cd
     mc__stop
     mc__backup
     echo "Restarting server..."
@@ -169,7 +161,6 @@ mc__announce_restart() {
   if ! mc__is_running ; then
     echo "Server not started!"
   else
-    mc__cd
     screen -S "$screen_name" -X stuff "say Server restarting in 10 minutes!^M"
     sleep 300
     screen -S "$screen_name" -X stuff "say Server restarting in 5 minutes!^M"
@@ -182,6 +173,42 @@ mc__announce_restart() {
   fi
 }
 
+print_help() {
+  cat << EOF
+Available switches:
+  -d                  specify the server directory
+
+Available commands:
+  start               start the server
+  stop                stop the server
+  backup              start a server backup
+    --live              backup running server
+    --noskip            don't check for player activity
+  restart             restart the server
+  announce_restart    plan a restart in 10 minutes and announce it
+EOF
+}
+
+folder=`dirname "$0"`
+
+while getopts "d:" opt; do
+  case "$opt" in
+    d) folder="$OPTARG" ;;
+    \?) print_help ; exit 1 ;;
+  esac
+done
+
+shift $(( OPTIND - 1 ))
+
+cd "$folder" || { echo "Directory $folder not found, aborting." ; exit 1 ; }
+. mcbc.conf || { echo "MCBC configuration file not found in `pwd`, aborting." ; exit 1 ; }
+
+if [ $# -eq 0 ] ; then
+  echo "No command specified."
+  print_help
+  exit 1
+fi
+
 cmd="mc__$1"
 if declare -f "$cmd" > /dev/null ; then
   shift
@@ -189,5 +216,6 @@ if declare -f "$cmd" > /dev/null ; then
   exit 0
 else
   echo "${1}: command not found."
+  print_help
   exit 1
 fi
