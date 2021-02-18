@@ -1,5 +1,6 @@
-# MCBC
-## Minecraft Bash Controller
+![Rock on!](https://github.com/FHomps/MCBC/blob/master/logo.png?raw=true)
+
+## MCBC - Minecraft Bash Controller
 
 A simple custom script for minecraft server administration. Easy commands for turning the server on and off, automatically updating the jar file, and backing up the server.
 
