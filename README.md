@@ -4,7 +4,7 @@
 
 A simple custom script for minecraft server administration. Easy commands for turning the server on and off, automatically updating the jar file, and backing up the server.
 
-To use, put ```mcbc.sh``` and ```mcbc.conf``` in your server folder, edit the configuration as you see fit, and run ```mcbc.sh``` with any of the available commands. You can also use ```mcbc.sh``` from another folder by specifying your server folder with the ```-d``` switch. MCBC will not run if it does not find a configuration file, to avoid running it in the wrong folder in case of bad inputs.
+To use, put ```mcbc.sh``` and ```mcbc.conf``` in your server folder, edit the configuration as you see fit, and run ```mcbc.sh``` with any of the available commands. You can also use ```mcbc.sh``` from another folder by specifying your server folder with the ```-d``` switch. MCBC will not run if it does not find a configuration file in the server folder to prevent fumbles.
 
 MCBC is made to work nicely with cron; the backup command is smart and will not backup the server if no players were online since the last backup.
 
