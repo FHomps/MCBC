@@ -20,13 +20,40 @@ backup_done_msg='Live backup done!'
 # Logging
 num_logs=50
 
-mc__is_running() {
+print_help() {
+  cat << EOF
+Available switches:
+  -d                  specify the server directory
+
+Available commands:
+  start               start the server
+    -L                 log the started screen to mcbc_screen.log
+  stop                stop the server
+  backup              start a server backup
+    --live              backup running server
+    --noskip            don't check for player activity
+  restart             restart the server
+  announce_restart    plan a restart in 10 minutes and announce it
+EOF
+}
+
+is_running() {
   screen -list | grep -q "$screen_name"
   return $?
 }
 
-mc__start() {
-  if mc__is_running ; then
+mcbc__start() {
+  while getopts "L" opt; do
+    case "$opt" in
+      L) enable_screen_logging=true ;;
+      \?)
+      print_help
+      return 1
+      ;;
+    esac
+  done
+
+  if is_running ; then
     echo "Server already running!"
   else
     if [ "$autoupdate_jar" = true ] ; then
@@ -34,16 +61,20 @@ mc__start() {
       wget -O "$jar_name" "$jar_url"
     fi
     echo "Starting server..."
-    screen -d -m -S "$screen_name" java -Xms"$min_memory" -Xmx"$max_memory" "${java_options[@]}" -jar "$jar_name"
+    if [ "$enable_screen_logging" = true ] ; then
+      screen -d -m -S "$screen_name" -L -Logfile mcbc_screen.log java -Xms"$min_memory" -Xmx"$max_memory" "${java_options[@]}" -jar "$jar_name"
+    else
+      screen -d -m -S "$screen_name" java -Xms"$min_memory" -Xmx"$max_memory" "${java_options[@]}" -jar "$jar_name"
+    fi
   fi
 }
 
-mc__stop() {
-  if ! mc__is_running ; then
+mcbc__stop() {
+  if ! is_running ; then
     echo "Server not started!"
   else
     screen -S "$screen_name" -X stuff "stop^M"
-    while mc__is_running ; do
+    while is_running ; do
       sleep .1
     done
     echo "Successfully shut down server."
@@ -56,7 +87,7 @@ mc__stop() {
   fi
 }
 
-mc__backup() {
+mcbc__backup() {
   for arg in "$@" ; do
     case "$arg" in
       --live)
@@ -68,7 +99,8 @@ mc__backup() {
       shift
       ;;
       *)
-      echo "Unrecognized argument $arg"
+      echo "Invalid argument $arg for command backup"
+      print_help
       return 1
       ;;
     esac
@@ -76,13 +108,13 @@ mc__backup() {
 
   if [ "$live" = true ] ; then
     echo "Attempting live backup..."
-    if ! mc__is_running ; then
+    if ! is_running ; then
       echo "Server not started!"
       return 1
     fi
   else
     echo "Attempting offline backup..."
-    if mc__is_running ; then
+    if is_running ; then
       echo "Server still running!"
       return 1
     fi
@@ -146,20 +178,20 @@ mc__backup() {
   fi
 }
 
-mc__restart() {
-  if ! mc__is_running ; then
+mcbc__restart() {
+  if ! is_running ; then
     echo "Server not started!"
   else
-    mc__stop
-    mc__backup
+    mcbc__stop
+    mcbc__backup
     echo "Restarting server..."
-    mc__start
+    mcbc__start
   fi
 
 }
 
-mc__announce_restart() {
-  if ! mc__is_running ; then
+mcbc__announce_restart() {
+  if ! is_running ; then
     echo "Server not started!"
   else
     screen -S "$screen_name" -X stuff "say Server restarting in 10 minutes!^M"
@@ -170,24 +202,8 @@ mc__announce_restart() {
     sleep 50
     screen -S "$screen_name" -X stuff "say Server restarting in 10 seconds!^M"
     sleep 10
-    mc__restart
+    mcbc__restart
   fi
-}
-
-print_help() {
-  cat << EOF
-Available switches:
-  -d                  specify the server directory
-
-Available commands:
-  start               start the server
-  stop                stop the server
-  backup              start a server backup
-    --live              backup running server
-    --noskip            don't check for player activity
-  restart             restart the server
-  announce_restart    plan a restart in 10 minutes and announce it
-EOF
 }
 
 folder=`dirname "$0"`
@@ -195,7 +211,10 @@ folder=`dirname "$0"`
 while getopts "d:" opt; do
   case "$opt" in
     d) folder="$OPTARG" ;;
-    \?) print_help ; exit 1 ;;
+    \?)
+    print_help
+    exit 1
+    ;;
   esac
 done
 
@@ -210,7 +229,7 @@ if [ $# -eq 0 ] ; then
   exit 1
 fi
 
-cmd="mc__$1"
+cmd="mcbc__$1"
 if declare -f "$cmd" > /dev/null ; then
   shift
   "$cmd" "$@"
